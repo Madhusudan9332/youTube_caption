@@ -25,7 +25,7 @@ json_file = True
 
 # Function to process videos
 def process_videos(input_file, input_file_type, output_file, output_file_type):
-    global is_paused, is_stopped, current_index, append_file, print_transcript_data
+    global is_paused, is_stopped, current_index, append_file, print_transcript_data, json_file
 
     if append_file:
         output_file = append_file
