@@ -21,6 +21,7 @@ input_file = None
 append_file = None
 current_index = 0
 print_transcript_data = False
+json_file = True
 
 # Function to process videos
 def process_videos(input_file, input_file_type, output_file, output_file_type):
@@ -181,7 +182,8 @@ def process_videos(input_file, input_file_type, output_file, output_file_type):
                                     segment_time_.append(segment_time)
                                     segment_text_.append(segment_text)
                                     segment_data.append([segment_time, segment_text])
-                                    transcript_data.append({"time": segment_time, "text": segment_text})
+                                    if json_file.get():                                        
+                                        transcript_data.append({"time": segment_time, "text": segment_text})
                                     if print_transcript_data.get():
                                         print(f"Time: {segment_time} - Text: {segment_text}")
                                 except Exception as e:
@@ -204,19 +206,21 @@ def process_videos(input_file, input_file_type, output_file, output_file_type):
                     ", ".join(segment_time_),  # Times as a single string
                     " | ".join(segment_text_)  # Texts as a single string
                 ])
-                output_json_data.append({
-                    "URL": video_url,
-                    "Title": video_title,
-                    "Caption Available": Caption,
-                    "Data": transcript_data
-                })
+                if json_file.get():
+                    output_json_data.append({
+                        "URL": video_url,
+                        "Title": video_title,
+                        "Caption Available": Caption,
+                        "Data": transcript_data
+                    })
 
             except Exception as e:
                 print(f"Error processing URL {video_url}: {e}")
 
         # Write to the output file
-        with open(f"{output_file}.json", "w", encoding="utf-8") as json_file:
-            json.dump(output_json_data, json_file, ensure_ascii=False, indent=4)
+        if json_file.get():
+            with open(f"{output_file}.json", "w", encoding="utf-8") as json_file:
+                json.dump(output_json_data, json_file, ensure_ascii=False, indent=4)
         print("Transcript data saved to 'transcript_data.json'.")
         if output_file_type == "xlsx":
             if append_file:
@@ -310,15 +314,17 @@ def stop_process():
 
 # Create the GUI window
 def main():
-    global input_file, file_label, append_label, input_type_var, output_type_var, pause_button, print_transcript_data
+    global input_file, file_label, append_label, input_type_var, output_type_var, pause_button, print_transcript_data, json_file
 
     input_file = None
 
     root = tk.Tk()
     
     print_transcript_data = tk.BooleanVar(value=False)
+    json_file = tk.BooleanVar(value=True)
+    
     root.title("YouTube Transcript Downloader")
-    root.geometry("500x400")
+    root.geometry("500x500")
 
     tk.Label(root, text="Select Input File Type:", font=("Arial", 12)).pack(pady=10)
     input_type_var = tk.StringVar(value="xlsx")
@@ -327,16 +333,21 @@ def main():
     tk.Label(root, text="Select Output File Format:", font=("Arial", 12)).pack(pady=10)
     output_type_var = tk.StringVar(value="xlsx")
     ttk.Combobox(root, textvariable=output_type_var, values=["xlsx", "csv"], state="readonly").pack(pady=5)
-
-    checkbox = tk.Checkbutton(root, text="Json File", variable=print_transcript_data)
-    label = tk.Label(root, text=f"Checkbox Value: {print_transcript_data.get()}")
-    checkbox.pack(pady=5)
-    label.pack(pady=10)
+    
+    checkbox_print = tk.Checkbutton(root, text="Print Transcript Data", variable=print_transcript_data)
+    label_print = tk.Label(root, text=f"Checkbox Value: {print_transcript_data.get()}")
+    checkbox_print.pack(pady=5)
+    label_print.pack(pady=10)
+    
+    checkbox_json = tk.Checkbutton(root, text="Json File", variable=json_file)
+    label_json = tk.Label(root, text=f"Checkbox Value: {json_file.get()}")
+    checkbox_json.pack(pady=5)
+    label_json.pack(pady=10)
     
     # Input and Append File Selection (Inline Buttons)
     file_frame = tk.Frame(root)
     file_frame.pack(pady=10)
-
+    
     tk.Button(file_frame, text="Browse Input File", command=browse_input_file, font=("Arial", 12), bg="blue", fg="white").grid(row=0, column=0, padx=5)
     tk.Button(file_frame, text="Append Output File", command=browse_append_file, font=("Arial", 12), bg="purple", fg="white").grid(row=0, column=1, padx=5)
     tk.Button(file_frame, text="Clear Append File", command=clear_append_file, font=("Arial", 12), bg="red", fg="white").grid(row=0, column=2, padx=5)
